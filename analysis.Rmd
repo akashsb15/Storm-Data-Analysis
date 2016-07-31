@@ -95,12 +95,14 @@ g
 
 ### 10 Most Expensive Event Types
 
-We know that the extent of economic damages are denoted by the features, PROPDMG and PROPDMGEXP, where the former gives a value and the latter describes whether the value in thousands or millions. For ease of manipulation lets create a new variable that contians the full amount. For this we will create a new feature called TOTDMG. Before that, lets also load the data and select only the required columns. In this case, EVTYPE, PROPDMG and PROPDMGEXP.
+We know that the extent of economic damages are denoted by the features, PROPDMG and PROPDMGEXP, where the former gives a value and the latter describes whether the value in thousands (K), millions (M) or billions (B). Similarly, there are CROPDMG and CROPDMGEXP. For ease of manipulation lets create a new variable that contians the full amount. For this we will create a new feature called TOTDMG. Before that, lets also load the data and select only the required columns. In this case, EVTYPE, PROPDMG, CROPDMG, CROPDMGEXP and PROPDMGEXP.
 
 ```{r economic}
-reqData <- myData[,c("EVTYPE","PROPDMG","PROPDMGEXP")]
+reqData <- myData[,c("EVTYPE","PROPDMG","PROPDMGEXP","CROPDMG","CROPDMGEXP")]
 groupByEvt <- group_by(reqData, EVTYPE)
-groupByEvt <- mutate(groupByEvt, TOTDMG = ifelse(PROPDMGEXP == "M", PROPDMG*10^6, PROPDMG*10^3))
+groupByEvt <- mutate(groupByEvt, TOTDMGP = ifelse(PROPDMGEXP == "M", PROPDMG*10^6, ifelse(PROPDMGEXP == "K", PROPDMG*10^3, PROPDMG*10^9)))
+groupByEvt <- mutate(groupByEvt, TOTDMGC = ifelse(CROPDMGEXP == "M", CROPDMG*10^6, ifelse(CROPDMGEXP == "K", CROPDMG*10^3, CROPDMG*10^9)))
+groupByEvt <- mutate(groupByEvt, TOTDMG = TOTDMGP + TOTDMGC)
 groupByEvt <- summarize(groupByEvt, sum(TOTDMG))
 
 groupByEvt <- groupByEvt[order(-groupByEvt$`sum(TOTDMG)`),]
@@ -123,4 +125,4 @@ g
 
 ## Results
 
-It is evident from the above plots and figures that the Tornado is the most dangerous natural event according to the dataset, both, in terms of the damage caused to humans and the economic damages.
+It is evident from the above plots and figures that the Tornado is the most dangerous natural event according to the dataset in terms of the damage caused to human health. Using the variables, FATALITIES and INJURIES, the extent of damage to humans was measured. PROPDMG, CROPDMG, PROPDMGEXP, CROPDMGEXP are used to measure economic damage. Thunderstorms are the most expensive events, with some individual values even in Billions.
